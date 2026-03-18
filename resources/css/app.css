@@ -1,0 +1,19 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+
+
+/* Colores personalizados del proyecto */
+@layer base {
+    :root {
+        --color-neutral-primary-soft: #f9fafb;
+        --color-neutral-tertiary: #f3f4f6;
+        --color-fg-brand: #1a56db;
+        --color-body: #4b5563;
+    }
+}
+
+[x-cloak] {
+    display: none !important;
+}
