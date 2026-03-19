@@ -47,12 +47,41 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    {{-- Alerta simplificada para evitar errores de compilación --}}
+    {{-- Alerta de éxito (cuando ya se eliminó o creó algo) --}}
     @if(session('swal'))
         <script>
             Swal.fire(@json(session('swal')));
         </script>
     @endif
+
+    {{-- SCRIPT DE CONFIRMACIÓN (NUEVO) --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Escuchamos el evento click en el documento
+            document.addEventListener('submit', function(e) {
+                // Si el formulario tiene la clase 'delete-form'
+                if (e.target.classList.contains('delete-form')) {
+                    e.preventDefault(); // Detenemos el envío
+                    
+                    Swal.fire({
+                        title: '¿Estás seguro?',
+                        text: "¡No podrás revertir esto!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Sí, eliminar',
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Si confirma, enviamos el formulario físicamente
+                            e.target.submit();
+                        }
+                    });
+                }
+            });
+        });
+    </script>
 
     @livewireScripts
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.2.1/dist/flowbite.min.js"></script>

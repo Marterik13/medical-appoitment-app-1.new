@@ -18,7 +18,7 @@ class UserTable extends DataTableComponent
     }
 
     /**
-     * Este es el método que viste en el video.
+     
      * Define la consulta base y carga los roles para evitar errores.
      */
     public function builder(): Builder
