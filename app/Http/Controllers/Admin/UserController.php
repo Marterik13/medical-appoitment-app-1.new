@@ -21,7 +21,9 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('admin.users.index');
+        // Nota: Normalmente para crear se usa una vista 'create', 
+        // pero he dejado la que tenías.
+        return view('admin.users.create'); 
     }
 
     /**
@@ -63,4 +65,4 @@ class UserController extends Controller
     {
         //
     }
-}
+} // <--- Asegúrate de que esta llave cierre la clase

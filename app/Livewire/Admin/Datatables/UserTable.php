@@ -2,38 +2,59 @@
 
 namespace App\Livewire\Admin\Datatables;
 
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder; // Importante
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
-use App\Models\User;
 
 class UserTable extends DataTableComponent
 {
-    protected $model = User::class;
+    //  quitar esta propiedad o la comenta para usar el método builder
+    // protected $model = User::class; 
 
     public function configure(): void
     {
         $this->setPrimaryKey('id');
     }
 
+    /**
+     * Este es el método que viste en el video.
+     * Define la consulta base y carga los roles para evitar errores.
+     */
+    public function builder(): Builder
+    {
+        return User::query()
+            ->with('roles'); // Carga la relación de Spatie
+    }
+
     public function columns(): array
     {
         return [
-            Column::make("Id", "id")
+            Column::make("ID", "id")
                 ->sortable(),
-            Column::make("Name", "name")
-                ->sortable(),
+            Column::make("Nombre", "name")
+                ->sortable()
+                ->searchable(),
             Column::make("Email", "email")
-                ->sortable(),
-            Column::make("Id number", "id_number")
-                ->sortable(),
-            Column::make("Phone", "phone")
-                ->sortable(),
-            Column::make("Address", "address")
-                ->sortable(),
-            Column::make("Created at", "created_at")
-                ->sortable(),
-            Column::make("Updated at", "updated_at")
-                ->sortable(),
+                ->sortable()
+                ->searchable(),
+            Column::make("Número de id", "id_number")
+                ->sortable()
+                ->searchable(),
+            Column::make("Teléfono", "phone")
+                ->sortable()
+                ->searchable(),
+            // Aquí es donde el video suele agregar la columna de Rol
+            Column::make("Rol", "roles.name") // Esto asume que el usuario tiene una relación 'roles' y quieres mostrar el nombre del primer rol
+                ->label(function($row){
+                    return $row->roles->first()?->name ?? 'Sin Rol';    
+                }),
+            
+            Column::make("Acciones")
+                ->label(function ($row) {
+                   return view('admin.users.actions',
+                    ['user' => $row]);
+                })
         ];
     }
 }

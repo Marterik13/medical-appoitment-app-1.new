@@ -19,6 +19,8 @@ class User extends Authenticatable
     use TwoFactorAuthenticatable;
     use HasRoles; 
 
+    
+
     protected $fillable = [
         'name',
         'email',
