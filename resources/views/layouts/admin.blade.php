@@ -86,4 +86,4 @@
     @livewireScripts
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.2.1/dist/flowbite.min.js"></script>
     </body>
-</html>
+</html> 
