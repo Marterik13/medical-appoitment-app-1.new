@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use Tests\TestCase; // <--- Importante: esto faltaba
+use Tests\TestCase; 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 // Al agregar TestCase::class aquí, Pest sabe que debe "bootear" Laravel antes del test

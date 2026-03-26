@@ -12,18 +12,20 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Definir roles
+        // Definir roles - Asegúrate de que 'Admin' esté en la lista
         $roles = [
+            'Admin',        // <-- ESTE ES EL QUE BUSCA TU DATABASE SEEDER
             'Paciente',
             'Doctor', 
-            'Administrador',
+            'Administrador', // Puedes dejar este también si quieres, no estorba
             'Super administrador'
         ];
 
         // Crear roles de forma segura
         foreach ($roles as $role) {
             Role::firstOrCreate([
-                'name' => $role
+                'name' => $role,
+                'guard_name' => 'web' // Es mejor especificar el guard por seguridad
             ]);
         }
     }

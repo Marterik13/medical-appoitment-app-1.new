@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Auth;
 
-
 class UserController extends Controller
 {
     public function index()
     {
-        return view('admin.users.index');
+        
+        $users = User::all();
+        return view('admin.users.index', compact('users'));
     }
 
     public function create()
@@ -24,7 +25,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        // Validación exacta del video: nótese la regex y los dígitos del teléfono
+        // 1. Validación (incluye la regex del video para el id_number)
         $data = $request->validate([
             'name'      => 'required|string|max:255',
             'email'     => 'required|email|max:255|unique:users',
@@ -37,11 +38,12 @@ class UserController extends Controller
 
         $data['password'] = bcrypt($data['password']);
 
-        // Crear el usuario
+        // 2. Crear el usuario en la tabla 'users'
         $user = User::create($data);
 
-        // El profe usa roles()->attach para la creación inicial
-        $user->roles()->attach($data['rol_id']);
+        // 3. Asignar el rol usando el sistema de Spatie
+        $role = Role::findById($data['rol_id']);
+        $user->assignRole($role->name);
 
         session()->flash('swal', [
             'icon'  => 'success',
@@ -49,25 +51,29 @@ class UserController extends Controller
             'text'  => 'El usuario se creó correctamente.',
         ]);
 
+        // Si es Paciente, crear registro médico y redirigir
+        if ($role->name === 'Paciente') {
+            // Creamos el registro en la tabla 'patients' (id, user_id, timestamps)
+            $patient = $user->patient()->create([]); 
+            
+            // Redirección inmediata al formulario de salud del paciente
+            return redirect()->route('admin.patients.edit', $patient);
+        }
+
         return redirect()->route('admin.users.index');
     }
 
     public function edit(User $user)
     {
-        $roles = Role::all(); // El profe también pasa los roles a la vista de edición
+        $roles = Role::all();
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
-    /**
-     * Update: Aquí es donde el video hace los cambios importantes
-     */
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
             'name'      => 'required|string|max:255',
-            // Se ignora el ID del usuario actual para permitir que mantenga su mismo correo
             'email'     => 'required|email|max:255|unique:users,email,' . $user->id,
-            // La contraseña es opcional en la edición (nullable)
             'password'  => 'nullable|string|min:8|confirmed',
             'id_number' => 'required|string|min:5|max:20|unique:users,id_number,' . $user->id,
             'phone'     => 'required|digits_between:7,15',
@@ -75,17 +81,16 @@ class UserController extends Controller
             'rol_id'    => 'required|exists:roles,id',
         ]); 
 
-        // Si la contraseña viene vacía, la eliminamos del array para no sobreescribir con nulo
         if ($request->filled('password')) {
             $data['password'] = bcrypt($data['password']);
         } else {
             unset($data['password']);
         }
 
-        // Actualizar datos del usuario
+        // Actualizamos datos básicos
         $user->update($data);
-
-        // CLAVE DEL VIDEO: Usar sync para reemplazar el rol anterior por el nuevo
+        
+        // Sincronizamos el rol (esto quita el anterior y pone el nuevo)
         $user->roles()->sync($data['rol_id']);
 
         session()->flash('swal', [
@@ -97,32 +102,28 @@ class UserController extends Controller
         return redirect()->route('admin.users.index');
     }
 
-   
-     public function destroy(User $user){
-
-        if ($user->id === auth::user()->id) {
-         session()->flash('swal', [
-             'icon'  => 'error',
-             'title' => '¡Error!',
-             'text'  => 'No puedes eliminar tu propio usuario.',
-         ]);
-
-         abort(403, 'No puedes borrar tu propio usuario.');
+    public function destroy(User $user)
+    {
+        // Protección para que no te borres a ti mismo 
+        if ($user->id === Auth::id()) {
+            session()->flash('swal', [
+                'icon'  => 'error',
+                'title' => '¡Acción denegada!',
+                'text'  => 'No puedes eliminar el usuario con el que estás logueado.',
+            ]);
+            return redirect()->back();
         }
 
-    // 1. Eliminar roles asociados al usuario en la tabla pivote
-    $user->roles()->detach();
+        // Limpiamos roles y eliminamos
+        $user->roles()->detach();
+        $user->delete();
 
-    // 2. Eliminar al usuario de la base de datos
-    $user->delete();
+        session()->flash('swal', [
+            'icon'  => 'success',
+            'title' => 'Eliminado',
+            'text'  => 'El usuario ha sido borrado del sistema.',
+        ]);
 
-    // 3. Lanzar la alerta de éxito para SweetAlert2
-    session()->flash('swal', [
-        'icon'  => 'success',
-        'title' => 'Usuario eliminado',
-        'text'  => 'El usuario ha sido eliminado correctamente.',
-    ]);
-
-    return redirect()->route('admin.users.index');
-}
+        return redirect()->route('admin.users.index');
     }
+}

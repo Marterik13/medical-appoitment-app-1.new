@@ -22,10 +22,9 @@ Route::middleware([
     // --- TUS RUTAS DE ADMINISTRACIÓN ---
     
   
-    // Cambia la línea 26 por esta:
+
 Route::get('/admin/users', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('admin.users.index');
 
-// Cambia la línea 29 por esta:
 Route::get('/admin/roles', [\App\Http\Controllers\Admin\RoleController::class, 'index'])->name('admin.roles.index');
     
 });
