@@ -285,4 +285,27 @@ return [
         'work'                     => 'trabajo',
         'year'                     => 'año',
     ],
+    'attributes' => [
+    // Datos de Usuario/Cuenta
+    'name'                           => 'nombre',
+    'email'                          => 'correo electrónico',
+    'password'                       => 'contraseña',
+    'phone'                          => 'teléfono',
+    'address'                        => 'dirección',
+    'gender'                         => 'género',
+    'id_number'                      => 'número de identificación',
+
+    // Datos Médicos (Campos de tu formulario)
+    'blood_type_id'                  => 'tipo de sangre',
+    'allergies'                      => 'alergias',
+    'chronic_conditions'             => 'antecedentes patológicos',
+    'surgical_history'               => 'antecedentes quirúrgicos',
+    'family_history'                 => 'antecedentes familiares',
+    'observations'                   => 'observaciones médicas',
+
+    // Contacto de Emergencia
+    'emergency_contact_name'         => 'nombre del contacto de emergencia',
+    'emergency_contact_phone'        => 'teléfono de emergencia',
+    'emergency_contact_relationship' => 'parentesco del contacto',
+],
 ];
