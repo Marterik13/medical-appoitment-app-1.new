@@ -36,5 +36,8 @@ class DatabaseSeeder extends Seeder
 
         // 3. ASIGNAR ROL (Súper importante para poder entrar al panel)
         $admin->assignRole('Admin');
+
+        // 4. Cargar datos de demostración (Doctores, Pacientes, Citas)
+        $this->call(DemoDataSeeder::class);
     }
 }
