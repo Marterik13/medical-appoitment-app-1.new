@@ -28,7 +28,20 @@ class DoctorController extends Controller
             'specialty' => 'nullable|string|max:255',
         ]);
 
-        Doctor::create($validated);
+        $doctor = Doctor::create($validated);
+
+        // Crear usuario asociado si no existe
+        $user = \App\Models\User::firstOrCreate(['email' => $doctor->email], [
+            'name' => $doctor->name,
+            'password' => bcrypt('12345678'), // Password por defecto
+            'id_number' => $doctor->dni,
+            'phone' => $doctor->phone ?? '0000000000',
+            'address' => 'Dirección por completar',
+        ]);
+
+        if (!$user->hasRole('Doctor')) {
+            $user->assignRole('Doctor');
+        }
 
         return redirect()->route('admin.doctors.index')->with('success', 'Doctor creado exitosamente.');
     }

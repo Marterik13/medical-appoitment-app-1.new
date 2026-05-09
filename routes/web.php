@@ -32,4 +32,5 @@ Route::get('/admin/doctors/{doctor}/schedules', [\App\Http\Controllers\Admin\Doc
     
 Route::resource('/admin/appointments', \App\Http\Controllers\Admin\AppointmentController::class)->names('admin.appointments');
     Route::get('/admin/appointments/{appointment}/consultation', [\App\Http\Controllers\Admin\AppointmentController::class, 'consultation'])->name('admin.appointments.consultation');
+    Route::get('/admin/appointments/{appointment}/pdf', [\App\Http\Controllers\Admin\AppointmentController::class, 'downloadPdf'])->name('admin.appointments.pdf');
 });

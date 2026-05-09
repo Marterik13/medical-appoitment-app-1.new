@@ -56,6 +56,7 @@ class AppointmentTable extends DataTableComponent
                 ->format(function ($value, $row, Column $column) {
                     $editUrl = route('admin.appointments.edit', $value);
                     $consultationUrl = route('admin.appointments.consultation', $value);
+                    $pdfUrl = route('admin.appointments.pdf', $value);
 
                     return '
                         <div class="flex gap-2">
@@ -64,6 +65,9 @@ class AppointmentTable extends DataTableComponent
                             </a>
                             <a href="'.$consultationUrl.'" class="text-white bg-green-500 hover:bg-green-600 rounded px-2 py-1 text-sm inline-flex items-center justify-center focus:outline-none" title="Atender Cita">
                                 <i class="fa-solid fa-file-medical"></i>
+                            </a>
+                            <a href="'.$pdfUrl.'" target="_blank" class="text-white bg-red-500 hover:bg-red-600 rounded px-2 py-1 text-sm inline-flex items-center justify-center focus:outline-none" title="Ver Comprobante PDF">
+                                <i class="fa-solid fa-file-pdf"></i>
                             </a>
                         </div>
                     ';

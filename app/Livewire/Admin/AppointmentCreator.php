@@ -6,8 +6,13 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\DoctorSchedule;
 use App\Models\Patient;
+use App\Models\User;
 use Livewire\Component;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\AppointmentConfirmationMail;
+use App\Mail\DailyReportMail;
+use App\Services\WhatsAppService;
 
 class AppointmentCreator extends Component
 {
@@ -147,12 +152,13 @@ class AppointmentCreator extends Component
             'selectedDoctorId' => 'required|exists:doctors,id',
             'searchDate' => 'required|date|after_or_equal:today',
             'selectedTime' => 'required|date_format:H:i',
+            'reason' => 'required|string|min:5|max:255',
         ]);
 
         $start = Carbon::parse($this->selectedTime);
         $end = $start->copy()->addMinutes(15);
 
-        Appointment::create([
+        $appointment = Appointment::create([
             'patient_id' => $this->patient_id,
             'doctor_id' => $this->selectedDoctorId,
             'date' => $this->searchDate,
@@ -163,13 +169,74 @@ class AppointmentCreator extends Component
             'status' => 1 // Programado
         ]);
 
+        // --- AUTOMATIZACIONES INMEDIATAS ---
+        try {
+            // 1. Enviar Email con PDF adjunto al paciente
+            Mail::to($appointment->patient->user->email)
+                ->send(new AppointmentConfirmationMail($appointment));
+
+            // Pequeña pausa para no saturar el límite de Mailtrap Free (5 emails por segundo)
+            sleep(1);
+
+            // 2. Enviar Email con PDF adjunto al doctor
+            Mail::to($appointment->doctor->email)
+                ->send(new AppointmentConfirmationMail($appointment));
+
+            // 3. Enviar mensaje de WhatsApp al paciente (Confirmación con link de PDF y Recordatorio)
+            $whatsApp = new WhatsAppService();
+            $whatsApp->sendConfirmation($appointment);
+            
+            // Pequeña pausa para CallMeBot
+            sleep(1);
+            $whatsApp->sendReminder($appointment);
+
+            // 4. PRUEBA DE REPORTE DIARIO (Se envía cada vez por petición del usuario para pruebas)
+            $this->triggerDailyReports();
+        } catch (\Exception $e) {
+            \Log::error("Error en automatizaciones inmediatas: " . $e->getMessage());
+        }
+        // ------------------------------------
+
+        $this->dispatch('appointment-confirmed', url: route('admin.appointments.pdf', $appointment));
+
         session()->flash('swal', [
             'icon'  => 'success',
             'title' => 'Cita Confirmada',
-            'text'  => 'La cita se ha programado exitosamente.',
+            'text'  => 'La cita se ha programado exitosamente. Abriendo comprobante...',
         ]);
+    }
 
-        return redirect()->route('admin.appointments.index');
+    protected function triggerDailyReports()
+    {
+        $today = Carbon::today()->toDateString();
+        
+        // 1. Reporte para Administrador (Todas las citas del día)
+        $allAppointments = Appointment::where('date', $today)
+            ->with(['patient.user', 'doctor'])
+            ->orderBy('start_time')
+            ->get();
+
+        if ($allAppointments->isNotEmpty()) {
+            $admins = User::role('Admin')->get();
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new DailyReportMail($allAppointments, 'Administrador'));
+            }
+        }
+
+        // 2. Reporte para cada Doctor (Sus citas del día)
+        $doctors = Doctor::whereHas('appointments', function($q) use ($today) {
+            $q->where('date', $today);
+        })->get();
+
+        foreach ($doctors as $doctor) {
+            $doctorAppointments = Appointment::where('doctor_id', $doctor->id)
+                ->where('date', $today)
+                ->with(['patient.user'])
+                ->orderBy('start_time')
+                ->get();
+
+            Mail::to($doctor->email)->send(new DailyReportMail($doctorAppointments, 'Doctor'));
+        }
     }
 
     public function getSelectedDoctorProperty()

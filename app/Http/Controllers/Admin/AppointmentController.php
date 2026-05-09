@@ -7,9 +7,17 @@ use App\Models\Appointment;
 use App\Models\Doctor;
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AppointmentController extends Controller
 {
+    public function downloadPdf(Appointment $appointment)
+    {
+        $appointment->load(['patient.user', 'doctor']);
+        $pdf = Pdf::loadView('pdf.appointment-voucher', compact('appointment'));
+        
+        return $pdf->stream('comprobante-cita-' . $appointment->id . '.pdf');
+    }
     /**
      * Display a listing of the resource.
      */

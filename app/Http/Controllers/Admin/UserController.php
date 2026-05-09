@@ -60,6 +60,16 @@ class UserController extends Controller
             return redirect()->route('admin.patients.edit', $patient);
         }
 
+        // Si es Doctor, crear registro en la tabla 'doctors'
+        if ($role->name === 'Doctor') {
+            \App\Models\Doctor::firstOrCreate(['email' => $user->email], [
+                'name' => $user->name,
+                'dni' => $user->id_number,
+                'phone' => $user->phone,
+                'specialty' => 'General', // Default specialty
+            ]);
+        }
+
         return redirect()->route('admin.users.index');
     }
 
